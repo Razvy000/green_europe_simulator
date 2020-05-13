@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Green Europe Catastrophic Events Simulator </title>
+    <script src="//cdn.jsdelivr.net/npm/phaser@3.11.0/dist/phaser.js"></script>
+    <style type="text/css">
+        body {
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Green Europe Catastrophic Events Simulator</h1>
+    <p>by AIception Team for EU DATAHON</p>
+    <script type="text/javascript">
+        //  Canvas and WebGL:
+
+        // NORMAL
+        // ADD
+        // MULTIPLY
+        // SCREEN
+
+        //  Canvas only:
+
+        // OVERLAY
+        // DARKEN
+        // LIGHTEN
+        // COLOR_DODGE
+        // COLOR_BURN
+        // HARD_LIGHT
+        // SOFT_LIGHT
+        // DIFFERENCE
+        // EXCLUSION
+        // HUE
+        // SATURATION
+        // COLOR
+        // LUMINOSITY
+        var config = {
+            type: Phaser.AUTO,
+            width: 800,
+            height: 600,
+            scene: {
+                preload: preload,
+                create: create,
+                update: update
+            }
+        };
+
+        // https://phaser.io/examples/v2/input/drag-event-parameters
+        // https://phaser.io/examples/v3/view/game-objects/container/draggable-container
+        // https://phaser.io/examples/v3/view/input/dragging/scrolling-text-box
+
+        var game = new Phaser.Game(config);
+        var bg = [];
+        var index = 0;
+        var button;
+        var research_button;
+        var research;
+        var research_visible = false;
+
+
+        var show_temp_level;
+        var show_sea_level;
+        var eu_agreement;
+        var show_year;
+
+        var temp_level = 1.1
+        var year = 2030
+        var sea_level = 0.9
+
+        // https://github.com/photonstorm/phaser3-examples/blob/master/public/src/display/blend%20modes/particle.js
+        var sprites = [];
+        //     Temperature rises above 4 degrees        
+        // - Sea rises above 1.5m           
+        // - 6 EU countries leave the Paris Agreement UNFCCC
+
+        function preload() {
+            this.load.image('eu map', '4 map labels.PNG');
+            this.load.image('eu terrain', '1 terrain.PNG')
+            this.load.image('eu terrain label', '2 terrain labels.PNG')
+            this.load.image('button', 'button-png-1.png')
+            this.load.image('research', 'research_tree.png')
+
+            // https://github.com/photonstorm/phaser3-examples/tree/master/public/assets/particles
+            this.load.image('particle', 'particleyellow.png');
+        }
+
+        function create() {
+
+
+
+            bg.push(this.add.image(0, 0, 'eu map'))
+            bg.push(this.add.image(0, 0, 'eu terrain'))
+            bg.push(this.add.image(0, 0, 'eu terrain label'))
+
+            for (let bgi of bg)
+                bgi.setVisible(false)
+            bg[index].setVisible(true)
+
+            // bg.setVisible(false)
+            // var text = this.add.image(0, 0, 'buttonText');
+            var container = this.add.container(config.width / 2, config.height / 2, bg)//, text]);
+            container.setSize(bg[0].width, bg[0].height);
+            container.setInteractive();
+            this.input.setDraggable(container);
+            // container.on('pointerover', function () {
+            //     // bg.setTint(0x44ff44);
+            // });
+            // container.on('pointerout', function () {
+            //     // bg.clearTint();
+            // });
+
+            this.input.on('drag', function (pointer, gameObject, dragX, dragY) {
+                gameObject.x = dragX;
+                gameObject.y = dragY;
+            });
+
+
+            // EVENTS
+            //  Create the particles
+            for (var i = 0; i < 100; i++) {
+                var x = Phaser.Math.Between(-64, 800);
+                var y = Phaser.Math.Between(-64, 600);
+
+                var image = this.add.image(x, y, 'particle');
+
+                image.setBlendMode(Phaser.BlendModes.ADD); // SATURATION
+
+                sprites.push({ s: image, r: 2 + Math.random() * 6 });
+            }
+
+            research = this.add.image(config.width / 2, config.height / 2, 'research')
+            research.setVisible(research_visible)
+            research.setScale(0.7, 0.7)
+
+
+
+            button = this.add.image(0, 0, 'button')
+            // this.world.bringToTop(button);
+            button.setScale(0.2, 0.2)
+            button.x = 670
+            button.y = 550
+            button.setInteractive()
+            button.setTint(0x44ff44);
+            button.on('pointerover', function () {
+                button.setTint(0x00ff00);
+            });
+            button.on('pointerout', function () {
+                button.clearTint();
+            });
+            button.on('pointerup', button_click, this);
+
+
+            research_button = this.add.image(0, 0, 'button')
+            research_button.setScale(0.2, 0.2)
+            research_button.x = 170
+            research_button.y = 550
+            research_button.setInteractive()
+            research_button.setTint(0x44ff44);
+            research_button.on('pointerover', function () {
+                button.setTint(0x00ff00);
+            });
+            research_button.on('pointerout', function () {
+                research_button.clearTint();
+            });
+            research_button.on('pointerup', research_click, this);
+
+
+            show_temp_level = this.add.text(500, 16, `temp rise: +1.1 °C`, { fontSize: '24px', fill: 'red', width: '2' });
+            show_sea_level = this.add.text(500, 16 + 32, `water rise: +0.9 m`, { fontSize: '24px', fill: 'red', width: '2' });
+            eu_agreement = this.add.text(500, 16 + 32 * 2, 'paris agreement: 197', { fontSize: '24px', fill: 'red', width: '2' });
+            show_year = this.add.text(500, 16 + 32 * 3, `year: ${year}`, { fontSize: '24px', fill: 'red', width: '2' });
+        }
+
+
+
+
+        function button_click() {
+            console.log('click')
+            bg[index].setVisible(false)
+            index += 1
+            index %= bg.length
+            bg[index].setVisible(true)
+        }
+
+        function research_click(){
+            console.log('research')
+            research_visible = ! research_visible
+            research.setVisible(research_visible)
+        }
+
+        var lastTime = 0
+        function update() {
+            for (var i = 0; i < sprites.length; i++) {
+                var sprite = sprites[i].s;
+
+                //sprite.y -= sprites[i].r;
+                sprite.x += sprites[i].r;
+
+                // if (sprite.y < -256) {
+                //     sprite.y = 700;
+                // }
+                sprite.x %= config.width 
+            }
+
+
+
+            time = new Date()
+            let dtime_ms = time - lastTime
+            let k_warp_time = 1
+            if (dtime_ms < 1000)
+                return;
+
+
+            year += 1
+            sea_level += 0.01
+            temp_level += 0.13
+
+            show_temp_level.setText(`temp rise: +${temp_level.toFixed(1)} °C`)
+            show_year.setText(`year: ${year}`)
+            show_sea_level.setText(`water rise: +${sea_level.toFixed(2)} m`)
+            lastTime = time
+        }
+
+    </script>
+
+</body>
+
+</html>
